@@ -1,0 +1,118 @@
+/* Base Styles */
+.packages-page {
+    padding: 3rem 0;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+  }
+  
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+  }
+  
+  .page-header .subtitle {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  
+  /* Package Grid */
+  .package-grid {
+    margin: 0 -10px;
+  }
+  
+  .package-col {
+    padding: 10px;
+    transition: all 0.3s ease;
+  }
+  
+  /* Loading State */
+  .loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    text-align: center;
+  }
+  
+  .loading-screen .spinner-grow {
+    width: 4rem;
+    height: 4rem;
+  }
+  
+  .loading-screen p {
+    font-size: 1.2rem;
+    color: #3498db;
+    margin-top: 1.5rem;
+  }
+  
+  /* Error State */
+  .error-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    text-align: center;
+    padding: 0 20px;
+  }
+  
+  .error-screen .alert {
+    font-size: 1.1rem;
+    max-width: 600px;
+  }
+  
+  /* No Packages State */
+  .no-packages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 0;
+    text-align: center;
+  }
+  
+  .no-packages img {
+    margin-bottom: 1.5rem;
+    opacity: 0.7;
+  }
+  
+  .no-packages h4 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+  }
+  
+  .no-packages p {
+    color: #7f8c8d;
+    max-width: 500px;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 1199px) {
+    .page-header h1 {
+      font-size: 2.2rem;
+    }
+  }
+  
+  @media (max-width: 767px) {
+    .packages-page {
+      padding: 2rem 0;
+    }
+    
+    .page-header h1 {
+      font-size: 1.8rem;
+    }
+    
+    .page-header .subtitle {
+      font-size: 1rem;
+    }
+  }
