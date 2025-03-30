@@ -455,6 +455,22 @@ const PackageCard = ({ packageData }) => {
     }
   };
 
+  // Add this validation function
+const isStepValid = (step) => {
+  switch(step) {
+    case 0: // Personal Information
+      return formData.age > 0 && formData.gender;
+    case 1: // Place Preferences
+      return formData.placeType.length > 0;
+    case 2: // Activities & Climate
+      return formData.hobby.length > 0 && formData.climate;
+    case 3: // Health Considerations (always valid as it's optional)
+      return true;
+    default:
+      return true;
+  }
+};
+
   const renderStepContent = (step) => {
     switch (step) {
       case 0:
@@ -805,49 +821,54 @@ const PackageCard = ({ packageData }) => {
           </div>
           
           <div className={classes.modalFooter}>
-            {activeStep === 4 ? (
-              <Button 
-                variant="outlined" 
-                color="primary" 
-                onClick={handleClose}
-              >
-                Close
-              </Button>
-            ) : (
-              <div style={{ width: '100%' }}>
-                <div className={classes.stepperButtons}>
-                  <Button
-                    disabled={activeStep === 0}
-                    onClick={handleBack}
-                    variant="outlined"
-                    startIcon={<NavigateBefore />}
-                  >
-                    Back
-                  </Button>
-                  {activeStep === steps.length - 1 ? (
-                    <Button 
-                      variant="contained" 
-                      color="primary" 
-                      onClick={handleSubmit}
-                      disabled={loading}
-                      endIcon={<NavigateNext />}
-                    >
-                      Get Recommendations
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleNext}
-                      endIcon={<NavigateNext />}
-                    >
-                      Next
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+  {activeStep === 4 ? (
+    <Button 
+      variant="outlined" 
+      color="primary" 
+      onClick={handleClose}
+    >
+      Close
+    </Button>
+  ) : (
+    <div style={{ width: '100%' }}>
+      <div className={classes.stepperButtons}>
+        <Button
+          disabled={activeStep === 0}
+          onClick={handleBack}
+          variant="outlined"
+          startIcon={<NavigateBefore />}
+        >
+          Back
+        </Button>
+        {activeStep === steps.length - 1 ? (
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={handleSubmit}
+            disabled={loading || !isStepValid(activeStep)} // Add validation here too
+            endIcon={<NavigateNext />}
+          >
+            Get Recommendations
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleNext}
+            endIcon={<NavigateNext />}
+            disabled={!isStepValid(activeStep)} // This freezes the button
+            style={{
+              opacity: isStepValid(activeStep) ? 1 : 0.6,
+              pointerEvents: isStepValid(activeStep) ? 'auto' : 'none'
+            }}
+          >
+            Next
+          </Button>
+        )}
+      </div>
+    </div>
+  )}
+</div>
         </div>
       </Modal>
     </>
