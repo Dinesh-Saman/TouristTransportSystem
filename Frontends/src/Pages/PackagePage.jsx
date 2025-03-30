@@ -10,6 +10,7 @@ import {
 import { makeStyles } from '@material-ui/core/styles';
 import axios from 'axios';
 import PackageCard from '../Components/PackageCard';
+import Header from '../Components/guest_header';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -66,9 +67,10 @@ const PackagesPage = () => {
   }
 
   return (
+    <div>
     <Container className={classes.root}>
       <Typography variant="h3" align="center" className={classes.title}>
-        Tour Packages
+        Our Tour Packages For You
       </Typography>
       <Typography variant="h6" align="center" color="textSecondary" className={classes.subtitle}>
         Discover our curated collection of travel packages tailored to your preferences
@@ -88,6 +90,9 @@ const PackagesPage = () => {
         </Button>
       </Box>
     </Container>
+
+    </div>
+
   );
 };
 

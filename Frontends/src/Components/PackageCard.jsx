@@ -22,13 +22,32 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemAvatar,
   Avatar,
-  CircularProgress
+  CircularProgress,
+  Divider,
+  Paper,
+  Tabs,
+  Tab,
+  Stepper,
+  Step,
+  StepLabel,
+  IconButton
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import axios from 'axios';
-import { Place, AccessTime, Image as ImageIcon } from '@material-ui/icons';
+import { 
+  Place, 
+  AccessTime, 
+  Image as ImageIcon,
+  Close as CloseIcon,
+  LocalActivity,
+  Favorite,
+  Nature,
+  LocalHospital,
+  NavigateNext,
+  NavigateBefore,
+  PersonOutline
+} from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   packageCard: {
@@ -85,26 +104,74 @@ const useStyles = makeStyles((theme) => ({
   modalContent: {
     backgroundColor: theme.palette.background.paper,
     boxShadow: theme.shadows[5],
-    padding: theme.spacing(4),
-    maxWidth: 800,
+    borderRadius: theme.shape.borderRadius,
+    maxWidth: 900,
     width: '90%',
     maxHeight: '90vh',
     overflowY: 'auto',
+    position: 'relative',
+    padding: 0
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing(2, 3),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    position: 'sticky',
+    top: 0,
+    backgroundColor: theme.palette.background.paper,
+    zIndex: 10,
+    borderTopLeftRadius: theme.shape.borderRadius,
+    borderTopRightRadius: theme.shape.borderRadius,
+  },
+  modalBody: {
+    padding: theme.spacing(3, 4),
+  },
+  closeButton: {
+    position: 'absolute',
+    right: theme.spacing(2),
+    top: theme.spacing(2),
+    color: theme.palette.grey[500],
   },
   formGroup: {
     marginBottom: theme.spacing(3),
   },
+  formSection: {
+    marginBottom: theme.spacing(4),
+    padding: theme.spacing(3),
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.background.default,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+  },
+  sectionTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: theme.spacing(2),
+    '& svg': {
+      marginRight: theme.spacing(1),
+      color: theme.palette.primary.main
+    }
+  },
   recommendationItem: {
     borderLeft: `4px solid ${theme.palette.primary.main}`,
-    marginBottom: theme.spacing(1),
+    marginBottom: theme.spacing(2),
     alignItems: 'flex-start',
+    borderRadius: 4,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+    padding: theme.spacing(2),
+    transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
+    '&:hover': {
+      boxShadow: '0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)',
+    }
   },
   recommendationImage: {
-    width: 80,
-    height: 80,
+    width: 90,
+    height: 90,
     borderRadius: 4,
     objectFit: 'cover',
     marginRight: theme.spacing(2),
+    boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
   },
   scoreBadge: {
     marginLeft: theme.spacing(2),
@@ -127,6 +194,171 @@ const useStyles = makeStyles((theme) => ({
       width: '100%',
     },
   },
+  tabs: {
+    marginBottom: theme.spacing(3),
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.grey[100],
+  },
+  tabContent: {
+    padding: theme.spacing(2, 0),
+  },
+  chip: {
+    margin: theme.spacing(0.5),
+    cursor: 'pointer',
+    '&.selected': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.primary.contrastText,
+    }
+  },
+  stepper: {
+    padding: theme.spacing(3, 0, 2),
+    backgroundColor: 'transparent',
+  },
+  stepperButtons: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginTop: theme.spacing(2),
+  },
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing(4),
+  },
+  recommendationsContainer: {
+    marginTop: theme.spacing(2),
+  },
+  recommendationHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: theme.spacing(2),
+    '& svg': {
+      marginRight: theme.spacing(1),
+      color: theme.palette.success.main
+    }
+  },
+  badge: {
+    height: 24,
+    minWidth: 24,
+    borderRadius: 12,
+    padding: '0 8px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: theme.spacing(1),
+  },
+  footer: {
+    marginTop: 'auto',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalFooter: {
+    padding: theme.spacing(2, 3),
+    borderTop: `1px solid ${theme.palette.divider}`,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    position: 'sticky',
+    bottom: 0,
+    backgroundColor: theme.palette.background.paper,
+    zIndex: 10,
+    borderBottomLeftRadius: theme.shape.borderRadius,
+    borderBottomRightRadius: theme.shape.borderRadius,
+  },
+  climateOption: {
+    margin: theme.spacing(0.5),
+    padding: theme.spacing(1.5),
+    borderRadius: theme.shape.borderRadius,
+    border: `1px solid ${theme.palette.divider}`,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    cursor: 'pointer',
+    width: 90,
+    height: 90,
+    backgroundColor: theme.palette.background.paper,
+    '&.selected': {
+      backgroundColor: theme.palette.primary.light,
+      borderColor: theme.palette.primary.main,
+      color: theme.palette.primary.contrastText
+    },
+    '&:hover': {
+      borderColor: theme.palette.primary.main,
+      backgroundColor: theme.palette.action.hover
+    }
+  },
+  climateIcon: {
+    fontSize: 32,
+    marginBottom: theme.spacing(1)
+  },
+  chipContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: theme.spacing(1),
+    marginTop: theme.spacing(2)
+  },
+  chip: {
+    margin: theme.spacing(0.5),
+    padding: theme.spacing(0.5, 1.5),
+    borderRadius: 16,
+    border: `1px solid ${theme.palette.divider}`,
+    display: 'inline-flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+    backgroundColor: theme.palette.background.paper,
+    transition: 'all 0.2s ease',
+    '&.selected': {
+      backgroundColor: theme.palette.primary.main,
+      borderColor: theme.palette.primary.dark,
+      color: theme.palette.primary.contrastText,
+    },
+    '&:hover': {
+      borderColor: theme.palette.primary.main,
+      backgroundColor: theme.palette.action.hover
+    }
+  },
+  scoreBar: {
+    display: 'inline-block',
+    height: 16,
+    backgroundColor: theme.palette.primary.main,
+    borderRadius: 8,
+    minWidth: 30
+  },
+  scoreContainer: {
+    width: 120,
+    display: 'flex',
+    alignItems: 'center',
+    '& .score': {
+      marginLeft: theme.spacing(1),
+      fontWeight: 'bold'
+    }
+  },
+  preview: {
+    marginTop: theme.spacing(1),
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.grey[100],
+    borderRadius: theme.shape.borderRadius,
+  },
+  previewTitle: {
+    fontSize: 14,
+    color: theme.palette.text.secondary,
+    marginBottom: theme.spacing(1),
+  },
+  selectionItem: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    backgroundColor: theme.palette.primary.light,
+    borderRadius: 16,
+    padding: theme.spacing(0.5, 1),
+    margin: theme.spacing(0.5),
+    fontSize: 14,
+  }
 }));
 
 const PackageCard = ({ packageData }) => {
@@ -134,6 +366,7 @@ const PackageCard = ({ packageData }) => {
   const [open, setOpen] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     age: 25,
     gender: 'male',
@@ -148,6 +381,13 @@ const PackageCard = ({ packageData }) => {
   const hobbies = ['Hiking', 'Surfing', 'Camping', 'Sightseeing', 'Adventure', 'Photography', 'Shopping', 'Relaxation', 'Learning', 'Bird Watching', 'Tea Tasting', 'Cultural Exploration', 'Boating', 'Walking'];
   const climates = ['Tropical', 'Temperate', 'Arid', 'Cold'];
   const healthIssues = ['Asthma', 'Back Pain', 'Knee Pain', 'Heart Condition'];
+
+  const steps = [
+    'Personal Information',
+    'Place Preferences',
+    'Activities & Climate',
+    'Health Considerations'
+  ];
 
   const handleCheckboxChange = (field, value) => {
     const updated = [...formData[field]];
@@ -178,6 +418,7 @@ const PackageCard = ({ packageData }) => {
       );
       
       setRecommendations(filteredRecs);
+      setActiveStep(4); // Move to results step
     } catch (error) {
       console.error('Error fetching recommendations:', error);
       alert('Failed to get recommendations. Please try again.');
@@ -193,6 +434,310 @@ const PackageCard = ({ packageData }) => {
   const handleClose = () => {
     setOpen(false);
     setRecommendations([]);
+    setActiveStep(0);
+  };
+
+  const handleNext = () => {
+    setActiveStep(prevStep => prevStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep(prevStep => prevStep - 1);
+  };
+
+  const getClimateIcon = (climate) => {
+    switch(climate) {
+      case 'Tropical': return '🌴';
+      case 'Temperate': return '🌿';
+      case 'Arid': return '🏜️';
+      case 'Cold': return '❄️';
+      default: return '🌍';
+    }
+  };
+
+  const renderStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return (
+          <div className={classes.formSection}>
+            <Typography variant="h6" className={classes.sectionTitle}>
+              <PersonOutline />
+              Personal Information
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <FormControl component="fieldset" fullWidth className={classes.formGroup}>
+                  <FormLabel component="legend">Age</FormLabel>
+                  <TextField
+                    type="number"
+                    inputProps={{ min: 1, max: 100 }}
+                    value={formData.age}
+                    onChange={(e) => setFormData({...formData, age: e.target.value})}
+                    fullWidth
+                    variant="outlined"
+                    margin="normal"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6} style={{marginTop:'17px'}}>
+                <FormControl component="fieldset" fullWidth className={classes.formGroup}>
+                  <FormLabel component="legend">Gender</FormLabel>
+                  <Select
+                    value={formData.gender}
+                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                  >
+                    <MenuItem value="male">Male</MenuItem>
+                    <MenuItem value="female">Female</MenuItem>
+                    <MenuItem value="other">Other</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </div>
+        );
+      case 1:
+        return (
+          <div className={classes.formSection}>
+            <Typography variant="h6" className={classes.sectionTitle}>
+              <Place />
+              Place Preferences
+            </Typography>
+            <FormControl component="fieldset" fullWidth>
+              <FormLabel component="legend">
+                What types of places would you like to visit?
+              </FormLabel>
+              
+              <div className={classes.chipContainer}>
+                {placeTypes.map(type => (
+                  <div 
+                    key={type} 
+                    className={`${classes.chip} ${formData.placeType.includes(type) ? 'selected' : ''}`}
+                    onClick={() => handleCheckboxChange('placeType', type)}
+                  >
+                    {type}
+                  </div>
+                ))}
+              </div>
+            </FormControl>
+
+            {formData.placeType.length > 0 && (
+              <div className={classes.preview}>
+                <Typography className={classes.previewTitle}>
+                  Selected place types:
+                </Typography>
+                <div>
+                  {formData.placeType.map(type => (
+                    <span key={type} className={classes.selectionItem}>
+                      {type}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      case 2:
+        return (
+          <>
+            <div className={classes.formSection}>
+              <Typography variant="h6" className={classes.sectionTitle}>
+                <LocalActivity />
+                Activities & Interests
+              </Typography>
+              <FormControl component="fieldset" fullWidth>
+                <FormLabel component="legend">
+                  What activities are you interested in?
+                </FormLabel>
+                
+                <div className={classes.chipContainer}>
+                  {hobbies.map(hobby => (
+                    <div 
+                      key={hobby} 
+                      className={`${classes.chip} ${formData.hobby.includes(hobby) ? 'selected' : ''}`}
+                      onClick={() => handleCheckboxChange('hobby', hobby)}
+                    >
+                      {hobby}
+                    </div>
+                  ))}
+                </div>
+              </FormControl>
+
+              {formData.hobby.length > 0 && (
+                <div className={classes.preview}>
+                  <Typography className={classes.previewTitle}>
+                    Selected activities:
+                  </Typography>
+                  <div>
+                    {formData.hobby.map(hobby => (
+                      <span key={hobby} className={classes.selectionItem}>
+                        {hobby}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className={classes.formSection}>
+              <Typography variant="h6" className={classes.sectionTitle}>
+                <Nature />
+                Preferred Climate
+              </Typography>
+              <FormControl component="fieldset" fullWidth>
+                <FormLabel component="legend">
+                  What climate do you prefer?
+                </FormLabel>
+                
+                <Box display="flex" flexWrap="wrap" mt={2}>
+                  {climates.map(climate => (
+                    <div 
+                      key={climate} 
+                      className={`${classes.climateOption} ${formData.climate === climate ? 'selected' : ''}`}
+                      onClick={() => setFormData({...formData, climate: climate})}
+                    >
+                      <span className={classes.climateIcon}>{getClimateIcon(climate)}</span>
+                      <Typography variant="body2">{climate}</Typography>
+                    </div>
+                  ))}
+                </Box>
+              </FormControl>
+            </div>
+          </>
+        );
+      case 3:
+        return (
+          <div className={classes.formSection}>
+            <Typography variant="h6" className={classes.sectionTitle}>
+              <LocalHospital />
+              Health Considerations
+            </Typography>
+            <FormControl component="fieldset" fullWidth>
+              <FormLabel component="legend">
+                Do you have any health considerations we should be aware of?
+              </FormLabel>
+              
+              <div className={classes.chipContainer}>
+                {healthIssues.map(issue => (
+                  <div 
+                    key={issue} 
+                    className={`${classes.chip} ${formData.physicalDisorders.includes(issue) ? 'selected' : ''}`}
+                    onClick={() => handleCheckboxChange('physicalDisorders', issue)}
+                  >
+                    {issue}
+                  </div>
+                ))}
+              </div>
+            </FormControl>
+
+            {formData.physicalDisorders.length > 0 && (
+              <div className={classes.preview}>
+                <Typography className={classes.previewTitle}>
+                  Selected health considerations:
+                </Typography>
+                <div>
+                  {formData.physicalDisorders.map(issue => (
+                    <span key={issue} className={classes.selectionItem}>
+                      {issue}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      case 4:
+        return (
+          <>
+            {loading ? (
+              <div className={classes.loadingContainer}>
+                <CircularProgress color="primary" size={60} />
+                <Typography variant="h6" style={{ marginTop: 16 }}>
+                  Generating your personalized recommendations...
+                </Typography>
+                <Typography variant="body2" color="textSecondary" style={{ marginTop: 8 }}>
+                  This may take a moment as we find the perfect places for you.
+                </Typography>
+              </div>
+            ) : (
+              <div className={classes.recommendationsContainer}>
+                <Typography variant="h6" className={classes.recommendationHeader}>
+                  <Favorite />
+                  Recommended Places 
+                  <span className={classes.badge}>{recommendations.length}</span>
+                </Typography>
+                
+                {recommendations.length > 0 ? (
+                  <List>
+                    {recommendations.map((place, index) => (
+                      <ListItem key={index} className={classes.recommendationItem}>
+                        {place.images && place.images.length > 0 ? (
+                          <img 
+                            src={place.images[0]} 
+                            alt={place.name}
+                            className={classes.recommendationImage}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/90x90?text=No+Image';
+                            }}
+                          />
+                        ) : (
+                          <Avatar className={classes.recommendationImage}>
+                            <ImageIcon />
+                          </Avatar>
+                        )}
+                        <div className={classes.recommendationContent}>
+                          <Box display="flex" alignItems="center" mb={0.5}>
+                            <Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>
+                              {place.name}
+                            </Typography>
+                            <div className={classes.scoreContainer} style={{ marginLeft: 'auto' }}>
+                              <div 
+                                className={classes.scoreBar} 
+                                style={{ width: `${Math.min(100, parseFloat(place.mlScore))}%` }}
+                              />
+                              <span className="score">{parseFloat(place.mlScore).toFixed(0)}%</span>
+                            </div>
+                          </Box>
+                          <Typography variant="body2" color="textSecondary">
+                            {place.whyRecommended}
+                          </Typography>
+                          <Box mt={1}>
+                            <Typography variant="caption" color="textSecondary">
+                              {place.placeType?.join(', ')}
+                            </Typography>
+                          </Box>
+                        </div>
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Paper className={classes.formSection} style={{ textAlign: 'center' }}>
+                    <Typography variant="body1">
+                      No recommendations found based on your preferences.
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary" style={{ marginTop: 8 }}>
+                      Try adjusting your criteria to get better matches.
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => setActiveStep(0)}
+                      style={{ marginTop: 16 }}
+                    >
+                      Modify Preferences
+                    </Button>
+                  </Paper>
+                )}
+              </div>
+            )}
+          </>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -238,196 +783,71 @@ const PackageCard = ({ packageData }) => {
         className={classes.modal}
       >
         <div className={classes.modalContent}>
-          <Typography variant="h5" gutterBottom>
-            Customize {packageData.name}
-          </Typography>
+          <div className={classes.modalHeader}>
+            <Typography variant="h6">
+              Customize {packageData.name}
+            </Typography>
+            <IconButton className={classes.closeButton} onClick={handleClose}>
+              <CloseIcon />
+            </IconButton>
+          </div>
           
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <FormControl component="fieldset" fullWidth className={classes.formGroup}>
-                <TextField
-                  label="Age"
-                  type="number"
-                  inputProps={{ min: 1, max: 100 }}
-                  value={formData.age}
-                  onChange={(e) => setFormData({...formData, age: e.target.value})}
-                  fullWidth
-                  variant="outlined"
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControl component="fieldset" fullWidth className={classes.formGroup}>
-                <FormLabel component="legend">Gender</FormLabel>
-                <Select
-                  value={formData.gender}
-                  onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                  variant="outlined"
-                  fullWidth
-                >
-                  <MenuItem value="male">Male</MenuItem>
-                  <MenuItem value="female">Female</MenuItem>
-                  <MenuItem value="other">Other</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-
-          <FormControl component="fieldset" fullWidth className={classes.formGroup}>
-            <FormLabel component="legend">Preferred Place Types</FormLabel>
-            <div className={classes.checkboxGroup}>
-              {placeTypes.map(type => (
-                <div key={type} className={classes.checkboxItem}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={formData.placeType.includes(type)}
-                        onChange={() => handleCheckboxChange('placeType', type)}
-                        color="primary"
-                      />
-                    }
-                    label={type}
-                  />
-                </div>
+          <div className={classes.modalBody}>
+            <Stepper activeStep={activeStep} className={classes.stepper} alternativeLabel>
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
               ))}
-            </div>
-          </FormControl>
-
-          <FormControl component="fieldset" fullWidth className={classes.formGroup}>
-            <FormLabel component="legend">Hobbies/Interests</FormLabel>
-            <div className={classes.checkboxGroup}>
-              {hobbies.map(hobby => (
-                <div key={hobby} className={classes.checkboxItem}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={formData.hobby.includes(hobby)}
-                        onChange={() => handleCheckboxChange('hobby', hobby)}
-                        color="primary"
-                      />
-                    }
-                    label={hobby}
-                  />
+            </Stepper>
+            
+            {renderStepContent(activeStep)}
+          </div>
+          
+          <div className={classes.modalFooter}>
+            {activeStep === 4 ? (
+              <Button 
+                variant="outlined" 
+                color="primary" 
+                onClick={handleClose}
+              >
+                Close
+              </Button>
+            ) : (
+              <div style={{ width: '100%' }}>
+                <div className={classes.stepperButtons}>
+                  <Button
+                    disabled={activeStep === 0}
+                    onClick={handleBack}
+                    variant="outlined"
+                    startIcon={<NavigateBefore />}
+                  >
+                    Back
+                  </Button>
+                  {activeStep === steps.length - 1 ? (
+                    <Button 
+                      variant="contained" 
+                      color="primary" 
+                      onClick={handleSubmit}
+                      disabled={loading}
+                      endIcon={<NavigateNext />}
+                    >
+                      Get Recommendations
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleNext}
+                      endIcon={<NavigateNext />}
+                    >
+                      Next
+                    </Button>
+                  )}
                 </div>
-              ))}
-            </div>
-          </FormControl>
-
-          <FormControl component="fieldset" fullWidth className={classes.formGroup}>
-            <FormLabel component="legend">Preferred Climate</FormLabel>
-            <RadioGroup
-              value={formData.climate}
-              onChange={(e) => setFormData({...formData, climate: e.target.value})}
-              row
-            >
-              <div className={classes.checkboxGroup}>
-                {climates.map(climate => (
-                  <div key={climate} className={classes.checkboxItem}>
-                    <FormControlLabel
-                      value={climate}
-                      control={<Radio color="primary" />}
-                      label={climate}
-                    />
-                  </div>
-                ))}
               </div>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl component="fieldset" fullWidth className={classes.formGroup}>
-            <FormLabel component="legend">Health Considerations</FormLabel>
-            <div className={classes.checkboxGroup}>
-              {healthIssues.map(issue => (
-                <div key={issue} className={classes.checkboxItem}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={formData.physicalDisorders.includes(issue)}
-                        onChange={() => handleCheckboxChange('physicalDisorders', issue)}
-                        color="primary"
-                      />
-                    }
-                    label={issue}
-                  />
-                </div>
-              ))}
-            </div>
-          </FormControl>
-
-          {loading && (
-            <Box display="flex" justifyContent="center" my={3}>
-              <Box textAlign="center">
-                <CircularProgress color="primary" />
-                <Typography variant="body1" style={{ marginTop: 16 }}>
-                  Generating recommendations...
-                </Typography>
-              </Box>
-            </Box>
-          )}
-
-          {recommendations.length > 0 && (
-            <Box mt={4}>
-              <Typography variant="h6" gutterBottom>
-                Recommended Places
-              </Typography>
-              <List>
-                {recommendations.map((place, index) => (
-                  <ListItem key={index} className={classes.recommendationItem}>
-                    {place.images && place.images.length > 0 ? (
-                      <img 
-                        src={place.images[0]} 
-                        alt={place.name}
-                        className={classes.recommendationImage}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'https://via.placeholder.com/80x80?text=No+Image';
-                        }}
-                      />
-                    ) : (
-                      <Avatar className={classes.recommendationImage}>
-                        <ImageIcon />
-                      </Avatar>
-                    )}
-                    <div className={classes.recommendationContent}>
-                      <Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>
-                        {place.name}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {place.whyRecommended}
-                      </Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        Type: {place.placeType?.join(', ')}
-                      </Typography>
-                    </div>
-                    <Badge
-                      color={parseFloat(place.mlScore) > 10 ? "primary" : "secondary"}
-                      badgeContent={`${place.mlScore}%`}
-                      className={classes.scoreBadge}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Box>
-          )}
-
-          <Box display="flex" justifyContent="flex-end" mt={4}>
-            <Button 
-              variant="outlined" 
-              color="primary" 
-              onClick={handleClose}
-              style={{ marginRight: 16 }}
-            >
-              Close
-            </Button>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? 'Processing...' : 'Get Recommendations'}
-            </Button>
-          </Box>
+            )}
+          </div>
         </div>
       </Modal>
     </>

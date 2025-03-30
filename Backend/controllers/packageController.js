@@ -1,6 +1,62 @@
 const TourPackage = require('../models/TourPackage');
 const RecommendationService = require('../services/recommendationService');
 const { validatePackageInput } = require('../utils/validation');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer storage
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    const uploadDir = 'uploads/';
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function(req, file, cb) {
+    cb(null, `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`);
+  }
+});
+
+// Filter only image files
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'), false);
+  }
+};
+
+// Create the multer upload instance
+const upload = multer({ 
+  storage, 
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // Limit file size to 5MB
+  }
+});
+
+// Handle image upload
+exports.uploadImage = (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    // Create the URL for the uploaded file
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    
+    res.status(200).json({
+      message: 'Image uploaded successfully',
+      imageUrl
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Get all packages
 exports.getAllPackages = async (req, res) => {
@@ -28,9 +84,6 @@ exports.getPackageById = async (req, res) => {
 // Create a new package
 exports.createPackage = async (req, res) => {
   try {
-    const { error } = validatePackageInput(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message });
-
     const newPackage = new TourPackage(req.body);
     await newPackage.save();
     res.status(201).json(newPackage);
@@ -42,9 +95,6 @@ exports.createPackage = async (req, res) => {
 // Update an existing package
 exports.updatePackage = async (req, res) => {
   try {
-    const { error } = validatePackageInput(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message });
-
     const updatedPackage = await TourPackage.findByIdAndUpdate(
       req.params.id, 
       req.body, 

@@ -33,7 +33,6 @@ exports.validatePackageInput = (data) => {
     name: Joi.string().required(),
     description: Joi.string().required(),
     duration: Joi.number().integer().min(1).required(),
-    price: Joi.number().min(0).required(),
     places: Joi.array().items(placeSchema).min(1).required()
   });
 

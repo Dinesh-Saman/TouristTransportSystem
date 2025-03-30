@@ -4,9 +4,12 @@ const packageRoutes = require('./routes/packageRoutes');
 const { PORT, MONGODB_URI } = require('./config');
 
 const app = express();
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware
 app.use(express.json());
+
 
 // Database connection
 mongoose.connect(MONGODB_URI, {
