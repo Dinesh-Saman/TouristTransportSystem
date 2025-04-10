@@ -1,6 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
+
 const packageRoutes = require('./routes/packageRoutes');
+const UserRoutes = require("./routes/userRoute");
+
 const { PORT, MONGODB_URI } = require('./config');
 
 const app = express();
@@ -9,7 +12,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware
 app.use(express.json());
-
 
 // Database connection
 mongoose.connect(MONGODB_URI, {
@@ -21,6 +23,7 @@ mongoose.connect(MONGODB_URI, {
 
 // Routes
 app.use('/api/packages', packageRoutes);
+app.use("/user", UserRoutes);  
 
 // Error handling middleware
 app.use((err, req, res, next) => {

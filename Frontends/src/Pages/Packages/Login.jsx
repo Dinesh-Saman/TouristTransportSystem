@@ -5,7 +5,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import swal from 'sweetalert';
-import Header from '../Components/navbar';
+import Header from '../../Components/navbar';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -89,7 +89,7 @@ const Login = () => {
     }
   
     try {
-      const response = await axios.post('http://localhost:3001/user/login', {
+      const response = await axios.post('http://localhost:5000/user/login', {
         email,
         password
       });

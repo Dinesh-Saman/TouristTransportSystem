@@ -30,7 +30,7 @@ import {
   LocalAtm
 } from '@material-ui/icons';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
-import PackagePage from '../Pages/PackagePage';
+import PackagePage from '../Packages/PackagePage';
 
 const useStyles = makeStyles((theme) => ({
   heroSection: {

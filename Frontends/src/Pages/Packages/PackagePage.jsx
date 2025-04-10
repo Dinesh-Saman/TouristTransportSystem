@@ -9,8 +9,8 @@ import {
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import axios from 'axios';
-import PackageCard from '../Components/PackageCard';
-import Header from '../Components/guest_header';
+import PackageCard from '../../Components/PackageCard';
+import Header from '../../Components/guest_header';
 
 const useStyles = makeStyles((theme) => ({
   root: {

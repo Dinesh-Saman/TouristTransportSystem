@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import Sidebar from '../Components/sidebar';
+import Sidebar from '../../Components/sidebar';
 import axios from 'axios';
 import html2canvas from 'html2canvas';
 import {
@@ -20,7 +20,7 @@ import {
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import letterheadImage from '../Images/letterhead.png'; 
+import letterheadImage from '../../Images/letterhead.png'; 
 import {
   LocationOn as LocationOnIcon,
   CalendarToday as CalendarTodayIcon,

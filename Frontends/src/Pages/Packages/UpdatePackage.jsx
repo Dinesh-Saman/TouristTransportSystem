@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { 
   TextField, Button, MenuItem, FormControl, Select, InputLabel, Box, Typography, 
   FormHelperText, Grid, Divider, IconButton, Card, CardContent, Chip, Checkbox,
-  FormControlLabel
+  FormControlLabel, CircularProgress
 } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import { Add, Delete, AddPhotoAlternate, Remove } from '@material-ui/icons';
-import Sidebar from '../Components/sidebar';
-import Header from '../Components/guest_header'; 
+import Sidebar from '../../Components/sidebar';
+import Header from '../../Components/guest_header'; 
 import axios from 'axios';
 import swal from 'sweetalert';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Edit } from '@material-ui/icons';
 
-const AddTourPackage = () => {
+const UpdateTourPackage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  
   // Main package details
   const [packageId, setPackageId] = useState('');
   const [packageName, setPackageName] = useState('');
@@ -47,6 +53,32 @@ const AddTourPackage = () => {
   });
   const [placeImage, setPlaceImage] = useState('');
   const [placeErrors, setPlaceErrors] = useState({});
+
+  // Effect to fetch package data
+  useEffect(() => {
+    const fetchPackageData = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/packages/${id}`);
+        const packageData = response.data;
+        
+        setPackageId(packageData._id);
+        setPackageName(packageData.name);
+        setDescription(packageData.description);
+        setDuration(packageData.duration);
+        setDistrict(packageData.district);
+        setPackageImage(packageData.packageImage);
+        setPlaces(packageData.places || []);
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching package data:', error);
+        swal("Error", "Failed to load package data", "error");
+        navigate('/packages');
+      }
+    };
+
+    fetchPackageData();
+  }, [id, navigate]);
 
   // Effect to check if all required fields are filled
   useEffect(() => {
@@ -187,6 +219,12 @@ const AddTourPackage = () => {
     setPlaces(updatedPlaces);
   };
 
+  const handleUpdatePlace = (index, updatedPlace) => {
+    const updatedPlaces = [...places];
+    updatedPlaces[index] = updatedPlace;
+    setPlaces(updatedPlaces);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const validationErrors = validateForm();
@@ -211,7 +249,7 @@ const AddTourPackage = () => {
         imageUrl = uploadResponse.data.imageUrl;
       }
   
-      const newPackage = {
+      const updatedPackage = {
         package_id: packageId,
         name: packageName,
         description,
@@ -227,32 +265,14 @@ const AddTourPackage = () => {
         }))
       };
   
-      const response = await axios.post('http://localhost:5000/api/packages', newPackage);
+      const response = await axios.put(`http://localhost:5000/api/packages/${id}`, updatedPackage);
       console.log('Response:', response.data);
       
-      swal("Success", "New tour package added successfully!", "success");
-      // Reset form fields
-      setPackageId('');
-      setPackageName('');
-      setDescription('');
-      setDuration('');
-      setDistrict('');
-      setPackageImage('');
-      setUploadedImage(null);
-      setPlaces([]);
-      setErrors({});
+      swal("Success", "Tour package updated successfully!", "success");
+      navigate('/view-packages');
     } catch (error) {
-      console.error('Error creating package:', error);
-      
-      if (error.response && error.response.status === 400) {
-        swal("Error", error.response.data.message, "error");
-        setErrors(prevErrors => ({ 
-          ...prevErrors, 
-          packageId: "A package with this ID already exists" 
-        }));
-      } else {
-        swal("Error", "Something went wrong. Please try again.", "error");
-      }
+      console.error('Error updating package:', error);
+      swal("Error", "Something went wrong. Please try again.", "error");
     }
   };
 
@@ -294,6 +314,14 @@ const AddTourPackage = () => {
     'Medical Support', 'Shuttle Service'
   ];
 
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <Box display="flex" style={{ backgroundColor: '#f5f5f5'}}>
@@ -311,7 +339,7 @@ const AddTourPackage = () => {
             justifyContent="center"
           >
             <Typography variant="h4" gutterBottom style={{ fontFamily: 'cursive', fontWeight: 'bold', color: 'purple', textAlign: 'center', marginTop:'30px', marginBottom:'50px' }}>
-              Add New Tour Package
+              Update Tour Package
             </Typography>
           </Box>
 
@@ -341,6 +369,7 @@ const AddTourPackage = () => {
                       helperText={errors.packageId}
                       error={!!errors.packageId}
                       required
+                      disabled
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -426,11 +455,11 @@ const AddTourPackage = () => {
                 
                 <Box mt={2}>
                   <Typography variant="body1" style={{ textAlign: 'left', marginBottom: '15px', color: '#666' }}>
-                    <strong>Note:</strong> After adding the package, you can:
+                    <strong>Note:</strong> After updating the package, you can:
                   </Typography>
                   <Typography variant="body2" style={{ textAlign: 'left', color: '#666' }}>
-                    • Add more places to this package from the package details page<br />
-                    • Edit package information<br />
+                    • Add more places to this package<br />
+                    • Edit existing places<br />
                     • Manage recommendations and promotions<br />
                     • View package performance metrics
                   </Typography>
@@ -544,7 +573,7 @@ const AddTourPackage = () => {
 
                 {/* Place Details Section */}
                 <Typography variant="h6" gutterBottom style={{ color: '#555', marginTop: '20px' }}>
-                  Add Places to Package
+                  Add/Edit Places in Package
                 </Typography>
                 
                 <Grid container spacing={2}>
@@ -907,7 +936,7 @@ const AddTourPackage = () => {
                 <Divider style={{ margin: '20px 0' }} />
                 
                 <Typography variant="h6" gutterBottom style={{ marginTop: '20px' }}>
-                  Added Places
+                  Current Places in Package
                 </Typography>
                 
                 {places.length === 0 ? (
@@ -921,9 +950,20 @@ const AddTourPackage = () => {
                         <CardContent>
                           <Box display="flex" justifyContent="space-between" alignItems="center">
                             <Typography variant="h6">{place.name}</Typography>
-                            <IconButton size="small" onClick={() => handleRemovePlace(index)}>
-                              <Delete />
-                            </IconButton>
+                            <Box>
+                              <IconButton 
+                                size="small" 
+                                onClick={() => {
+                                  setCurrentPlace(place);
+                                  handleRemovePlace(index);
+                                }}
+                              >
+                                <Edit />
+                              </IconButton>
+                              <IconButton size="small" onClick={() => handleRemovePlace(index)}>
+                                <Delete />
+                              </IconButton>
+                            </Box>
                           </Box>
                           <Typography variant="body2" color="textSecondary">
                             Types: {place.placeType.join(', ')}
@@ -965,17 +1005,23 @@ const AddTourPackage = () => {
               </Grid>
             </Grid>
             
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              size="large"
-              type="submit"
-              style={{ marginTop: 24 }}
-              disabled={!isFormValid}
-            >
-              Add Tour Package
-            </Button>
+            <Box display="flex" justifyContent="space-between" mt={4}>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => navigate('/packages')}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+                disabled={!isFormValid}
+              >
+                Update Tour Package
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -983,4 +1029,4 @@ const AddTourPackage = () => {
   );
 };
 
-export default AddTourPackage;
+export default UpdateTourPackage;
