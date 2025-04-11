@@ -17,6 +17,7 @@ import AddUser from './Pages/User/AddUser';
 import UserReportPage from './Pages/User/UserReport';
 import UserRegistration from "./Pages/User/Register";
 import EditProfile from "./Pages/User/EditProfile";
+import MainDashboard from "./Pages/Admin/main_dashboard";
 
 
 const App = () => {
@@ -25,7 +26,6 @@ const App = () => {
       <Header />
       <Routes>
         <Route path="/" element={<TransportHome />} />
-        <Route path="/home" element={<TransportHome />} />
         <Route path="/login" element={< Login/>} />
         <Route path="/packages" element={<PackagePage />} />
         <Route path="/add-package" element={<AddTourPackage />} />
@@ -41,6 +41,8 @@ const App = () => {
         <Route path="/users" element={<ViewUsers/>} />
         <Route path="/add-user" element={<AddUser/>} />
         <Route path="/user-report" element={<UserReportPage/>} />
+
+        <Route path="/dashboard" element={< MainDashboard/>} />
       </Routes>
       <Footer />
     </>

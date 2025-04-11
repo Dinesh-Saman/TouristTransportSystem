@@ -9,23 +9,23 @@ class UserAuthController {
   async registerUser(req, res) {
     try {
       const { user_id, full_name, email, contact, address, dob, gender, password } = req.body;
-
+  
       // Check if user already exists with the same email
       const existingUserEmail = await User.findOne({ email });
       if (existingUserEmail) {
         return res.status(409).json({ message: "This email is already registered" });
       }
-
+  
       // Check if user already exists with the same contact
       const existingUserContact = await User.findOne({ contact });
       if (existingUserContact) {
         return res.status(409).json({ message: "This contact number is already registered" });
       }
-
+  
       // Hash the password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
-
+  
       // Create new user
       const newUser = new User({
         user_id,
@@ -36,13 +36,17 @@ class UserAuthController {
         dob,
         gender,
         password: hashedPassword,
+        profile_picture: req.file ? req.file.path : null, // Add profile picture path if file was uploaded
         reset_token: null,
         reset_token_expiry: null,
       });
-
+  
       await newUser.save();
       res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
+      if (error instanceof multer.MulterError) {
+        return res.status(400).json({ message: 'File upload error: ' + error.message });
+      }
       console.error(error);
       res.status(500).json({ message: "Server error", error: error.message });
     }
@@ -79,6 +83,7 @@ class UserAuthController {
           user_id: user.user_id,
           full_name: user.full_name,
           email: user.email,
+          profile_picture: user.profile_picture // Include profile picture in response
         },
       });
     } catch (error) {
@@ -87,7 +92,7 @@ class UserAuthController {
     }
   }
 
-  // Forgot password
+  // Forgot password (unchanged)
   async forgotPassword(req, res) {
     try {
       const { email } = req.body;
@@ -144,7 +149,7 @@ class UserAuthController {
     }
   }
 
-  // Reset password
+  // Reset password (unchanged)
   async resetPassword(req, res) {
     try {
       const token = req.params.token;
@@ -180,7 +185,7 @@ class UserAuthController {
   // Get all users
   async getAllUsers(req, res) {
     try {
-      const users = await User.find();
+      const users = await User.find().select('-password -reset_token -reset_token_expiry');
       res.status(200).json({ users });
     } catch (error) {
       res.status(500).json({ message: "Error fetching users", error: error.message });
@@ -191,7 +196,7 @@ class UserAuthController {
   async getUserById(req, res) {
     try {
       const { id } = req.params;
-      const user = await User.findOne({ _id: id });
+      const user = await User.findOne({ _id: id }).select('-password -reset_token -reset_token_expiry');
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -209,11 +214,16 @@ class UserAuthController {
       const { id } = req.params;
       const updateData = { ...req.body };
 
+      // If a file was uploaded, add the profile picture path
+      if (req.file) {
+        updateData.profile_picture = req.file.path;
+      }
+
       // Find and update the user
       const updatedUser = await User.findOneAndUpdate({ _id: id }, updateData, {
         new: true, // Return the updated document
         runValidators: true, // Validate the update data
-      });
+      }).select('-password -reset_token -reset_token_expiry');
 
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
@@ -235,13 +245,15 @@ class UserAuthController {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // TODO: You might want to delete the profile picture file from storage here
+
       res.status(200).json({ message: "User deleted successfully", user: deletedUser });
     } catch (error) {
       res.status(500).json({ message: "Error deleting user", error: error.message });
     }
   }
 
-  // Add this method to the UserAuthController class
+  // Get user profile
   async getUserProfile(req, res) {
     try {
       // Extract the token from the Authorization header
@@ -255,7 +267,7 @@ class UserAuthController {
       const userId = decoded.id;
 
       // Find the user by ID
-      const user = await User.findById(userId).select('-password -reset_token -reset_token_expiry'); // Exclude sensitive fields
+      const user = await User.findById(userId).select('-password -reset_token -reset_token_expiry');
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -271,86 +283,137 @@ class UserAuthController {
     }
   }
 
-  // Add this method to the UserAuthController class
-async updateProfile(req, res) {
-  try {
-    // Extract the token from the Authorization header
-    const token = req.headers.authorization?.split(' ')[1]; // Format: "Bearer <token>"
-    if (!token) {
-      return res.status(401).json({ message: "No token provided" });
-    }
-
-    // Verify the token and extract the user ID
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
-    const userId = decoded.id;
-
-    // Extract the update data from the request body
-    const { full_name, email, contact, address, dob, gender, password } = req.body;
-
-    // Find the user by ID
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Validate email (if provided)
-    if (email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: "Invalid email format" });
+  // Update user profile
+  async updateProfile(req, res) {
+    try {
+      // Extract the token from the Authorization header
+      const token = req.headers.authorization?.split(' ')[1]; // Format: "Bearer <token>"
+      if (!token) {
+        return res.status(401).json({ message: "No token provided" });
       }
 
-      // Check if the new email is already registered by another user
-      const existingUserEmail = await User.findOne({ email, _id: { $ne: userId } });
-      if (existingUserEmail) {
-        return res.status(409).json({ message: "This email is already registered" });
+      // Verify the token and extract the user ID
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
+      const userId = decoded.id;
+
+      // Extract the update data from the request body
+      const { full_name, email, contact, address, dob, gender, password } = req.body;
+
+      // Find the user by ID
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
-      user.email = email;
-    }
+      // Validate email (if provided)
+      if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          return res.status(400).json({ message: "Invalid email format" });
+        }
 
-    // Validate contact (if provided)
-    if (contact) {
-      const contactRegex = /^\d{10}$/;
-      if (!contactRegex.test(contact)) {
-        return res.status(400).json({ message: "Contact number must be 10 digits" });
+        // Check if the new email is already registered by another user
+        const existingUserEmail = await User.findOne({ email, _id: { $ne: userId } });
+        if (existingUserEmail) {
+          return res.status(409).json({ message: "This email is already registered" });
+        }
+
+        user.email = email;
       }
 
-      // Check if the new contact is already registered by another user
-      const existingUserContact = await User.findOne({ contact, _id: { $ne: userId } });
-      if (existingUserContact) {
-        return res.status(409).json({ message: "This contact number is already registered" });
+      // Validate contact (if provided)
+      if (contact) {
+        const contactRegex = /^\d{10}$/;
+        if (!contactRegex.test(contact)) {
+          return res.status(400).json({ message: "Contact number must be 10 digits" });
+        }
+
+        // Check if the new contact is already registered by another user
+        const existingUserContact = await User.findOne({ contact, _id: { $ne: userId } });
+        if (existingUserContact) {
+          return res.status(409).json({ message: "This contact number is already registered" });
+        }
+
+        user.contact = contact;
       }
 
-      user.contact = contact;
+      // Update other fields (if provided)
+      if (full_name) user.full_name = full_name;
+      if (address) user.address = address;
+      if (dob) user.dob = dob;
+      if (gender) user.gender = gender;
+
+      // Update profile picture if file was uploaded
+      if (req.file) {
+        // TODO: You might want to delete the old profile picture file from storage here
+        user.profile_picture = req.file.path;
+      }
+
+      // Update password (if provided)
+      if (password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+      }
+
+      // Save the updated user
+      await user.save();
+
+      // Return the updated user details (excluding sensitive fields)
+      const updatedUser = await User.findById(userId).select('-password -reset_token -reset_token_expiry');
+      res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+    } catch (error) {
+      console.error(error);
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+      res.status(500).json({ message: "Server error", error: error.message });
     }
-
-    // Update other fields (if provided)
-    if (full_name) user.full_name = full_name;
-    if (address) user.address = address;
-    if (dob) user.dob = dob;
-    if (gender) user.gender = gender;
-
-    // Update password (if provided)
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
-    }
-
-    // Save the updated user
-    await user.save();
-
-    // Return the updated user details (excluding sensitive fields)
-    const updatedUser = await User.findById(userId).select('-password -reset_token -reset_token_expiry');
-    res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
-  } catch (error) {
-    console.error(error);
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-    res.status(500).json({ message: "Server error", error: error.message });
   }
-}
+
+  // Upload profile picture
+  async uploadProfilePicture(req, res) {
+    try {
+      // Extract the token from the Authorization header
+      const token = req.headers.authorization?.split(' ')[1];
+      if (!token) {
+        return res.status(401).json({ message: "No token provided" });
+      }
+
+      // Verify the token and extract the user ID
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
+      const userId = decoded.id;
+
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // Find the user and update profile picture
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // TODO: Delete the old profile picture file if it exists
+
+      // Update the profile picture path
+      user.profile_picture = req.file.path;
+      await user.save();
+
+      // Return the updated user with profile picture URL
+      const updatedUser = await User.findById(userId).select('-password -reset_token -reset_token_expiry');
+      res.status(200).json({ 
+        message: "Profile picture uploaded successfully",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error(error);
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  }
 }
 
 module.exports = new UserAuthController();

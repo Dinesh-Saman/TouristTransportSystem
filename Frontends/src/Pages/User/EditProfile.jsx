@@ -1,29 +1,166 @@
 import React, { useState, useEffect } from 'react';
 import {
-  TextField, Button, MenuItem, FormControl, Select, InputLabel, Box,
-  Typography, FormHelperText, Grid, RadioGroup, FormControlLabel, Radio,
-  IconButton, Chip, List, ListItem, Paper, Divider, Link, Avatar
+  TextField, Button, Box, Typography, FormHelperText,
+  RadioGroup, FormControlLabel, Radio, Avatar, CircularProgress,
+  FormControl, Link
 } from '@material-ui/core';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import DeleteIcon from '@material-ui/icons/Delete';
 import axios from 'axios';
 import swal from 'sweetalert';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../Components/navbar';
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing(3),
+    backgroundImage: 'url(https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed',
+    position: 'relative',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+    }
+  },
+  formContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: theme.shape.borderRadius * 2,
+    boxShadow: theme.shadows[10],
+    width: '100%',
+    maxWidth: '600px',
+    padding: theme.spacing(4),
+    position: 'relative',
+    zIndex: 1,
+    [theme.breakpoints.down('sm')]: {
+      padding: theme.spacing(3),
+    },
+    border: '2px solid #3f51b5', // Added border styling
+    '&:before': { // Added decorative corner elements
+      content: '""',
+      position: 'absolute',
+      top: -10,
+      left: -10,
+      right: -10,
+      bottom: -10,
+      border: '2px solid #3f51b5',
+      borderRadius: theme.shape.borderRadius * 2 + 4,
+      zIndex: -1,
+      opacity: 0.5
+    },
+    '&:after': { // Added another decorative layer
+      content: '""',
+      position: 'absolute',
+      top: -15,
+      left: -15,
+      right: -15,
+      bottom: -15,
+      border: '2px solid #3f51b5',
+      borderRadius: theme.shape.borderRadius * 2 + 8,
+      zIndex: -2,
+      opacity: 0.3
+    }
+  },
+  title: {
+    fontFamily: '"Montserrat", sans-serif',
+    fontWeight: 700,
+    color: theme.palette.primary.main,
+    textAlign: 'center',
+    marginBottom: theme.spacing(4),
+    textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+    position: 'relative',
+    '&:after': { // Added underline effect
+      content: '""',
+      position: 'absolute',
+      bottom: -10,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '80px',
+      height: '4px',
+      backgroundColor: theme.palette.primary.main,
+      borderRadius: '2px'
+    }
+  },
+  avatarContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginBottom: theme.spacing(3)
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    border: '3px solid #e0e0e0',
+    boxShadow: theme.shadows[3],
+    marginBottom: theme.spacing(2)
+  },
+  submitButton: {
+    marginTop: theme.spacing(3),
+    padding: theme.spacing(1.5),
+    fontSize: '1rem',
+    fontWeight: 600,
+    letterSpacing: 1.1,
+    borderRadius: 50,
+    boxShadow: theme.shadows[2],
+    '&:hover': {
+      boxShadow: theme.shadows[4],
+      transform: 'translateY(-2px)',
+      backgroundColor: theme.palette.primary.dark
+    },
+    transition: 'all 0.3s ease' // Added smooth transition
+  },
+  loginLink: {
+    fontWeight: 600,
+    color: theme.palette.primary.dark,
+    '&:hover': {
+      textDecoration: 'none',
+      color: theme.palette.primary.main
+    }
+  },
+  inputField: { // Added styling for input fields
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': {
+        borderColor: '#3f51b5',
+        borderWidth: '1px'
+      },
+      '&:hover fieldset': {
+        borderColor: '#3f51b5',
+        borderWidth: '1px'
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#3f51b5',
+        borderWidth: '1px'
+      }
+    }
+  }
+}));
 
 const EditProfile = () => {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [contact, setContact] = useState('');
-  const [address, setAddress] = useState('');
-  const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [profilePicture, setProfilePicture] = useState('');
+  const classes = useStyles();
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    contact: '',
+    address: '',
+    dob: '',
+    gender: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [profilePicture, setProfilePicture] = useState(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState('');
   const [errors, setErrors] = useState({});
-  const [isFormValid, setIsFormValid] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,21 +171,21 @@ const EditProfile = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
   
-        // Access the nested `user` object in the response
         const userData = response.data.user;
   
-        // Set the form fields with the user data
-        setFullName(userData.full_name);
-        setEmail(userData.email);
-        setContact(userData.contact);
-        setAddress(userData.address);
-        setDob(userData.dob.split('T')[0]); // Format date to YYYY-MM-DD
-        setGender(userData.gender);
+        setFormData({
+          fullName: userData.full_name,
+          email: userData.email,
+          contact: userData.contact,
+          address: userData.address,
+          dob: userData.dob.split('T')[0],
+          gender: userData.gender,
+          password: '',
+          confirmPassword: ''
+        });
         
-        // Set profile picture if it exists
         if (userData.profile_picture) {
-          setProfilePicture(userData.profile_picture);
-          setProfilePicturePreview(userData.profile_picture);
+          setProfilePicturePreview(`http://localhost:5000/${userData.profile_picture}`);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -59,294 +196,259 @@ const EditProfile = () => {
     fetchUserData();
   }, []);
 
-  // Validate contact number (10 digits)
-  const validateContact = (value) => {
-    const contactRegex = /^\d{10}$/;
-    return contactRegex.test(value);
-  };
-
-  // Validate email format
-  const validateEmail = (value) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(value);
-  };
-
-  const handleContactChange = (e) => {
-    const value = e.target.value;
-    setContact(value);
-
-    // Real-time validation for contact
-    if (value && !validateContact(value)) {
-      setErrors(prevErrors => ({
-        ...prevErrors,
-        contact: "Contact number must be 10 digits"
-      }));
-    } else {
-      setErrors(prevErrors => ({ ...prevErrors, contact: '' }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const handleEmailChange = (e) => {
-    const value = e.target.value;
-    setEmail(value);
+  const validateContact = (value) => /^\d{10}$/.test(value);
+  const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-    // Real-time validation for email
-    if (value && !validateEmail(value)) {
-      setErrors(prevErrors => ({
-        ...prevErrors,
-        email: "Invalid email format"
-      }));
-    } else {
-      setErrors(prevErrors => ({ ...prevErrors, email: '' }));
-    }
-  };
-
-  const handleGenderChange = (event) => {
-    setGender(event.target.value);
-    setErrors(prevErrors => ({ ...prevErrors, gender: '' }));
-  };
-
-  const handleDobChange = (e) => {
-    setDob(e.target.value);
-    setErrors(prevErrors => ({ ...prevErrors, dob: '' }));
-  };
-
-  // Handle profile picture upload
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-    if (!validTypes.includes(file.type)) {
-      setErrors(prevErrors => ({
-        ...prevErrors,
-        profilePicture: "Only JPG, JPEG, and PNG files are allowed"
-      }));
+    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+      setErrors(prev => ({ ...prev, profilePicture: "Only JPG/PNG images allowed" }));
       return;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      setErrors(prevErrors => ({
-        ...prevErrors,
-        profilePicture: "File size must be less than 2MB"
-      }));
+      setErrors(prev => ({ ...prev, profilePicture: "Max file size is 2MB" }));
       return;
     }
+
+    setProfilePicture(file);
+    setErrors(prev => ({ ...prev, profilePicture: '' }));
 
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfilePicturePreview(reader.result);
-      setProfilePicture(reader.result); // Store base64 string
-    };
+    reader.onload = () => setProfilePicturePreview(reader.result);
     reader.readAsDataURL(file);
-    setErrors(prevErrors => ({ ...prevErrors, profilePicture: '' }));
   };
 
-  // Remove profile picture
   const handleRemoveProfilePicture = () => {
-    setProfilePicture('');
+    setProfilePicture(null);
     setProfilePicturePreview('');
   };
 
-  // Validate form fields
   const validateForm = () => {
     const newErrors = {};
-    if (!fullName) newErrors.fullName = "Full name is required.";
-    if (!email) newErrors.email = "Email is required.";
-    else if (!validateEmail(email)) newErrors.email = "Invalid email format.";
-    if (!contact) newErrors.contact = "Contact number is required.";
-    else if (!validateContact(contact)) newErrors.contact = "Contact number must be 10 digits.";
-    if (!address) newErrors.address = "Address is required.";
-    if (!dob) newErrors.dob = "Date of birth is required.";
-    if (!gender) newErrors.gender = "Gender is required.";
-    if (password && password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match.";
+    const { fullName, email, contact, address, dob, gender, password, confirmPassword } = formData;
+
+    if (!fullName) newErrors.fullName = "Full name is required";
+    if (!email) newErrors.email = "Email is required";
+    else if (!validateEmail(email)) newErrors.email = "Invalid email format";
+    if (!contact) newErrors.contact = "Contact is required";
+    else if (!validateContact(contact)) newErrors.contact = "Must be 10 digits";
+    if (!address) newErrors.address = "Address is required";
+    if (!dob) newErrors.dob = "Date of birth is required";
+    if (!gender) newErrors.gender = "Gender is required";
+    if (password && password.length < 8) newErrors.password = "Minimum 8 characters";
+    if (password && password !== confirmPassword) newErrors.confirmPassword = "Passwords don't match";
 
     return newErrors;
   };
 
-  // Handle form submission
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
       return;
     }
 
-    const updatedUser = {
-      full_name: fullName,
-      email,
-      contact,
-      address,
-      dob,
-      gender,
-      password: password || undefined, // Only include password if it's provided
-      profile_picture: profilePicture // Include the profile picture
-    };
+    setIsSubmitting(true);
+
+    const data = new FormData();
+    data.append('full_name', formData.fullName);
+    data.append('email', formData.email);
+    data.append('contact', formData.contact);
+    data.append('address', formData.address);
+    data.append('dob', formData.dob);
+    data.append('gender', formData.gender);
+    if (formData.password) data.append('password', formData.password);
+    if (profilePicture) data.append('profile_picture', profilePicture);
 
     try {
       const token = localStorage.getItem('token');
-      await axios.put('http://localhost:5000/user/profile', updatedUser, {
-        headers: { Authorization: `Bearer ${token}` },
+      await axios.put('http://localhost:5000/user/profile', data, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      swal('Success', 'Profile updated successfully!', 'success');
+      swal("Success", "Profile updated successfully!", "success");
     } catch (error) {
-      console.error('Error updating profile:', error);
-      swal('Error', 'Failed to update profile. Please try again.', 'error');
+      console.error("Update error:", error);
+      if (error.response?.status === 409) {
+        const field = error.response.data.message.includes("email") ? "email" : "contact";
+        swal("Error", error.response.data.message, "error");
+        setErrors(prev => ({ ...prev, [field]: error.response.data.message }));
+      } else {
+        swal("Error", "Update failed. Please try again.", "error");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Box
-      style={{
-        backgroundImage: 'url(https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px'
-      }}
-    >
-      <Box
-        style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          borderRadius: 8,
-          boxShadow: '0px 0px 15px rgba(0,0,0,0.2)',
-          width: '100%',
-          maxWidth: '550px',
-          padding: '30px',
-          margin: '40px 0'
-        }}
-      >
-        {/* Title Section */}
-        <Typography 
-          variant="h4" 
-          gutterBottom 
-          style={{
-            fontFamily: 'cursive',
-            fontWeight: 'bold',
-            color: 'purple',
-            textAlign: 'center',
-            marginBottom: '30px'
-          }}
-        >
+    <Box className={classes.root}>
+      <Box className={classes.formContainer}>
+        <Typography variant="h4" className={classes.title}>
           Edit Profile
         </Typography>
 
-        {/* Form Section */}
+        {/* Profile Picture Section */}
+        <Box className={classes.avatarContainer}>
+          <Avatar
+            src={profilePicturePreview}
+            className={classes.avatar}
+            alt="Profile"
+          />
+          
+          <Box display="flex" alignItems="center">
+            <input
+              accept="image/*"
+              id="profile-upload"
+              type="file"
+              style={{ display: 'none' }}
+              onChange={handleProfilePictureChange}
+            />
+            <label htmlFor="profile-upload">
+              <Button
+                variant="contained"
+                color="primary"
+                component="span"
+                startIcon={<CloudUploadIcon />}
+                size="small"
+                disabled={isSubmitting}
+                style={{ marginRight: 8 }}
+              >
+                Upload
+              </Button>
+            </label>
+            
+            {profilePicturePreview && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<DeleteIcon />}
+                onClick={handleRemoveProfilePicture}
+                size="small"
+                disabled={isSubmitting}
+              >
+                Remove
+              </Button>
+            )}
+          </Box>
+          
+          {errors.profilePicture && (
+            <Typography color="error" variant="caption" style={{ marginTop: 8 }}>
+              {errors.profilePicture}
+            </Typography>
+          )}
+          
+          <Typography variant="caption" style={{ marginTop: 8, color: '#666' }}>
+            Recommended: Square image, JPG or PNG, max 2MB
+          </Typography>
+        </Box>
+
         <Box component="form" noValidate autoComplete="off" onSubmit={handleSubmit}>
           <TextField
             fullWidth
             margin="normal"
             label="Full Name"
-            variant="outlined"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            helperText={errors.fullName}
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
             error={!!errors.fullName}
+            helperText={errors.fullName}
             required
+            className={classes.inputField}
+            variant="outlined"
           />
 
           <TextField
             fullWidth
             margin="normal"
             label="Email"
-            variant="outlined"
-            value={email}
-            onChange={handleEmailChange}
-            helperText={errors.email}
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
             error={!!errors.email}
+            helperText={errors.email}
             required
+            className={classes.inputField}
+            variant="outlined"
           />
 
           <TextField
             fullWidth
             margin="normal"
             label="Contact Number"
-            variant="outlined"
-            value={contact}
-            onChange={handleContactChange}
-            helperText={errors.contact}
+            name="contact"
+            value={formData.contact}
+            onChange={handleChange}
+            inputProps={{ maxLength: 10 }}
             error={!!errors.contact}
+            helperText={errors.contact}
             required
+            className={classes.inputField}
+            variant="outlined"
           />
 
           <TextField
             fullWidth
             margin="normal"
             label="Address"
-            variant="outlined"
+            name="address"
             multiline
             rows={3}
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            helperText={errors.address}
+            value={formData.address}
+            onChange={handleChange}
             error={!!errors.address}
+            helperText={errors.address}
             required
+            className={classes.inputField}
+            variant="outlined"
           />
 
           <TextField
             fullWidth
             margin="normal"
             label="Date of Birth"
+            name="dob"
             type="date"
-            variant="outlined"
             InputLabelProps={{ shrink: true }}
-            value={dob}
-            onChange={handleDobChange}
-            helperText={errors.dob}
+            value={formData.dob}
+            onChange={handleChange}
             error={!!errors.dob}
+            helperText={errors.dob}
             required
+            className={classes.inputField}
+            variant="outlined"
           />
 
           <FormControl component="fieldset" margin="normal" error={!!errors.gender} required fullWidth>
             <Typography variant="subtitle1">Gender</Typography>
             <RadioGroup
-              aria-label="gender"
-              name="gender"
-              value={gender}
-              onChange={handleGenderChange}
               row
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
             >
-              <FormControlLabel value="Male" control={<Radio />} label="Male" />
-              <FormControlLabel value="Female" control={<Radio />} label="Female" />
+              <FormControlLabel value="Male" control={<Radio color="primary" />} label="Male" />
+              <FormControlLabel value="Female" control={<Radio color="primary" />} label="Female" />
             </RadioGroup>
             <FormHelperText>{errors.gender}</FormHelperText>
           </FormControl>
-
-          {/* Optional Password Fields */}
-          <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-            Change Password (Optional)
-          </Typography>
-
-          <TextField
-            fullWidth
-            margin="normal"
-            label="New Password"
-            type="password"
-            variant="outlined"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            helperText="Leave blank to keep current password"
-          />
-
-          <TextField
-            fullWidth
-            margin="normal"
-            label="Confirm New Password"
-            type="password"
-            variant="outlined"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            helperText={errors.confirmPassword}
-            error={!!errors.confirmPassword}
-          />
 
           <Button
             fullWidth
@@ -354,10 +456,20 @@ const EditProfile = () => {
             color="primary"
             size="large"
             type="submit"
-            style={{ marginTop: 25 }}
+            className={classes.submitButton}
+            disabled={isSubmitting}
+            startIcon={isSubmitting ? <CircularProgress size={24} /> : null}
           >
-            Update Profile
+            {isSubmitting ? 'Updating...' : 'Update Profile'}
           </Button>
+
+          <Box mt={4} textAlign="center">
+            <Typography variant="body1">
+              <Link href="/" className={classes.loginLink}>
+                Back to Home
+              </Link>
+            </Typography>
+          </Box>
         </Box>
       </Box>
     </Box>
