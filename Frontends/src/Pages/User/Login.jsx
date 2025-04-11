@@ -81,6 +81,7 @@ const Login = () => {
   
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
+        // In the Login component's handleSubmit function
         if (response.data.user) {
           console.log(response.data.user);
           const fullName = response.data.user.full_name || '';
@@ -89,9 +90,20 @@ const Login = () => {
           localStorage.setItem('userEmail', response.data.user.email || '');
           localStorage.setItem('userId', response.data.user.id || '');
           
+          // Store the profile picture URL
+          if (response.data.user.profile_picture) {
+            localStorage.setItem('profilePicture', `http://localhost:5000/${response.data.user.profile_picture}`);
+          }
+          
           // Dispatch login event
           window.dispatchEvent(new CustomEvent('loginUpdate', {
-            detail: { username: firstName, email: response.data.user.email }
+            detail: { 
+              username: firstName, 
+              email: response.data.user.email,
+              profilePicture: response.data.user.profile_picture 
+                ? `http://localhost:5000/${response.data.user.profile_picture}`
+                : null
+            }
           }));
         }
         

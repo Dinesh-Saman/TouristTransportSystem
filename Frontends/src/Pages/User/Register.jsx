@@ -101,11 +101,12 @@ const UserRegistration = () => {
   const [gender, setGender] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [profilePicture, setProfilePicture] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null); // Changed to null for actual file
   const [profilePicturePreview, setProfilePicturePreview] = useState('');
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(false);
   const [userId, setUserId] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Function to generate user ID
   const generateUserId = () => {
@@ -193,7 +194,7 @@ const UserRegistration = () => {
     setErrors(prevErrors => ({ ...prevErrors, dob: '' }));
   };
 
-  // Handle profile picture upload
+  // Handle profile picture upload - Updated for actual file upload
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -215,10 +216,13 @@ const UserRegistration = () => {
       return;
     }
 
+    // Store the actual file for form submission
+    setProfilePicture(file);
+
+    // Create preview for display
     const reader = new FileReader();
     reader.onloadend = () => {
       setProfilePicturePreview(reader.result);
-      setProfilePicture(reader.result);
     };
     reader.readAsDataURL(file);
     setErrors(prevErrors => ({ ...prevErrors, profilePicture: '' }));
@@ -226,7 +230,7 @@ const UserRegistration = () => {
 
   // Remove profile picture
   const handleRemoveProfilePicture = () => {
-    setProfilePicture('');
+    setProfilePicture(null);
     setProfilePicturePreview('');
   };
 
@@ -264,22 +268,35 @@ const UserRegistration = () => {
       return;
     }
 
-    const formattedDOB = new Date(dob).toISOString();
-
-    const newUser = {
-      user_id: userId,
-      full_name: fullName,
-      email,
-      contact,
-      address,
-      dob: formattedDOB,
-      gender,
-      password,
-      profile_picture: profilePicture
-    };
+    setIsLoading(true);
 
     try {
-      await axios.post('http://localhost:5000/user/register', newUser);
+      // Create a FormData object for file upload
+      const formData = new FormData();
+      formData.append("user_id", userId);
+      formData.append("full_name", fullName);
+      formData.append("email", email);
+      formData.append("contact", contact);
+      formData.append("address", address);
+      formData.append("dob", new Date(dob).toISOString());
+      formData.append("gender", gender);
+      formData.append("password", password);
+      
+      // Only append profile picture if it exists
+      if (profilePicture) {
+        formData.append("profile_picture", profilePicture);
+      }
+
+      // Set the proper headers for multipart/form-data
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+
+      // Send the request
+      await axios.post('http://localhost:5000/user/register', formData, config);
+      
       swal("Success", "User registered successfully!", "success");
 
       // Reset form fields but keep the user ID
@@ -291,7 +308,7 @@ const UserRegistration = () => {
       setGender('');
       setPassword('');
       setConfirmPassword('');
-      setProfilePicture('');
+      setProfilePicture(null);
       setProfilePicturePreview('');
       setErrors({});
 
@@ -316,6 +333,31 @@ const UserRegistration = () => {
       } else {
         swal("Error", "Something went wrong. Please try again.", "error");
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Modify these event handlers to ensure state updates properly
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    // Clear any password error when user types
+    if (value) {
+      setErrors(prevErrors => ({ ...prevErrors, password: '' }));
+    }
+  };
+
+  const handleConfirmPasswordChange = (e) => {
+    const value = e.target.value;
+    setConfirmPassword(value);
+    // Clear confirm password error or validate match
+    if (!value) {
+      setErrors(prevErrors => ({ ...prevErrors, confirmPassword: 'Confirm password is required.' }));
+    } else if (password !== value) {
+      setErrors(prevErrors => ({ ...prevErrors, confirmPassword: 'Passwords do not match.' }));
+    } else {
+      setErrors(prevErrors => ({ ...prevErrors, confirmPassword: '' }));
     }
   };
 
@@ -326,7 +368,7 @@ const UserRegistration = () => {
           Join TravelMate
         </Typography>
 
-        <Box component="form" noValidate autoComplete="off" onSubmit={handleSubmit}>
+        <Box component="form" noValidate encType="multipart/form-data" onSubmit={handleSubmit}>
           {/* Profile Picture Section */}
           <Box className={classes.avatarContainer}>
             <Avatar
@@ -337,7 +379,7 @@ const UserRegistration = () => {
             
             <Box display="flex" alignItems="center">
               <input
-                accept="image/*"
+                accept="image/jpeg,image/png,image/jpg"
                 style={{ display: 'none' }}
                 id="profile-picture-upload"
                 type="file"
@@ -486,7 +528,7 @@ const UserRegistration = () => {
             type="password"
             variant="outlined"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             helperText={errors.password || "At least 8 characters"}
             error={!!errors.password}
             required
@@ -499,7 +541,7 @@ const UserRegistration = () => {
             type="password"
             variant="outlined"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={handleConfirmPasswordChange}
             helperText={errors.confirmPassword}
             error={!!errors.confirmPassword}
             required
@@ -512,9 +554,9 @@ const UserRegistration = () => {
             size="large"
             type="submit"
             className={classes.submitButton}
-            disabled={!isFormValid}
+            disabled={!isFormValid || isLoading}
           >
-            Create Account
+            {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
           
           <Box mt={4} textAlign="center">
