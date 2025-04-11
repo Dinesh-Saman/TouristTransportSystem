@@ -105,22 +105,10 @@ const UserSidebar = () => {
             View Users
           </MenuItem>
         </Link>
-        <Link to="/add-user" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <MenuItem>
-            <Icon><FaUserPlus /></Icon>
-            Add User
-          </MenuItem>
-        </Link>
         <Link to="/user-report" style={{ textDecoration: 'none', color: 'inherit' }}>
           <MenuItem>
             <Icon><FaFileAlt /></Icon>
             User Report
-          </MenuItem>
-        </Link>
-        <Link to="/view-reviews" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <MenuItem>
-            <Icon><FaFileAlt /></Icon>
-            User Reviews
           </MenuItem>
         </Link>
       </Menu>

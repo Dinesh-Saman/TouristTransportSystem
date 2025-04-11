@@ -430,12 +430,12 @@ const ViewUsers = () => {
                         {user.profile_picture ? (
                           <Avatar 
                             className={classes.userAvatar} 
-                            src={user.profile_picture}
+                            src={`http://localhost:5000/${user.profile_picture}`}
                             alt={user.full_name}
                             onError={(e) => {
                               console.error("Error loading image");
                               e.target.onerror = null; 
-                              e.target.src = ""; 
+                              e.target.src = ""; // Fallback to default avatar if image fails to load
                             }}
                           />
                         ) : (
@@ -475,7 +475,7 @@ const ViewUsers = () => {
                               {user.profile_picture ? (
                                 <Avatar 
                                   className={classes.userAvatarLarge} 
-                                  src={user.profile_picture}
+                                  src={`http://localhost:5000/${user.profile_picture}`}
                                   alt={user.full_name}
                                   onError={(e) => {
                                     console.error("Error loading image");

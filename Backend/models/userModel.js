@@ -5,7 +5,7 @@ const userSchema = new Schema({
   user_id: {
     type: String,
     required: true,
-    unique: true, // Ensure user_id is unique
+    unique: true,
   },
   full_name: {
     type: String,
@@ -14,12 +14,12 @@ const userSchema = new Schema({
   email: {
     type: String,
     required: true,
-    unique: true, // Ensure email is unique
+    unique: true,
   },
   contact: {
     type: String,
     required: true,
-    unique: true, // Assuming contact numbers are unique
+    unique: true,
   },
   address: {
     type: String,
@@ -32,11 +32,15 @@ const userSchema = new Schema({
   gender: {
     type: String,
     required: true,
-    enum: ['Male', 'Female'], // Restricted to Male & Female only
+    enum: ['Male', 'Female'],
   },
   password: {
     type: String,
     required: true,
+  },
+  profile_picture: {  
+    type: String,     
+    default: null,  
   },
   reset_token: {
     type: String,
@@ -50,7 +54,7 @@ const userSchema = new Schema({
     type: Date,
     default: null,
   }
-}, { timestamps: true }); // Adds createdAt and updatedAt timestamps
+}, { timestamps: true });
 
 // Add index for faster lookup by reset token
 userSchema.index({ reset_token: 1 });

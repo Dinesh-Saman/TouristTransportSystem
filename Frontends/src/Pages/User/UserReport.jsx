@@ -231,7 +231,7 @@ const UserReportPage = () => {
                     <TableCell style={{ borderRight: '1px solid #ddd' }}>
                       {user.profile_picture ? (
                         <Avatar 
-                          src={user.profile_picture}
+                          src={`http://localhost:5000/${user.profile_picture.replace(/\\/g, '/')}`}
                           alt={user.full_name}
                           style={{ 
                             width: 40, 
@@ -241,7 +241,7 @@ const UserReportPage = () => {
                           onError={(e) => {
                             console.error("Error loading image");
                             e.target.onerror = null; 
-                            e.target.src = ""; 
+                            e.target.src = ""; // Fallback to default avatar if image fails to load
                           }}
                         />
                       ) : (
@@ -260,13 +260,7 @@ const UserReportPage = () => {
                     <TableCell style={{ borderRight: '1px solid #ddd' }}><strong>{user.full_name}</strong></TableCell>
                     <TableCell style={{ borderRight: '1px solid #ddd' }}>{user.email}</TableCell>
                     <TableCell style={{ borderRight: '1px solid #ddd' }}>{user.contact}</TableCell>
-                    <TableCell style={{ borderRight: '1px solid #ddd' }}>
-                      <Chip 
-                        label={user.gender || 'N/A'} 
-                        size="small" 
-                        style={getGenderChipStyle(user.gender)}
-                      />
-                    </TableCell>
+                    <TableCell style={{ borderRight: '1px solid #ddd' }}>{user.gender}</TableCell>
                     <TableCell>{user.address}</TableCell>
                   </TableRow>
                 ))}
