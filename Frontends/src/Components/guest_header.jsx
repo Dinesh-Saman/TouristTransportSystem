@@ -75,29 +75,32 @@ const Header = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [username, setUsername] = useState('User');
   const [userEmail, setUserEmail] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null);
   const [loginType, setLoginType] = useState('');
   const navigate = useNavigate();
 
-  // Track menu open state separately
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleLoginUpdate = (event) => {
-      const { username: newUsername, email } = event.detail;
+      const { username: newUsername, email, profilePicture } = event.detail;
       
       if (email === 'admin@gmail.com') {
         setUsername('Admin');
         setUserEmail(email);
+        setProfilePicture(null);
         setLoginType('admin');
       } 
       else if (newUsername) {
         setUsername(newUsername);
         setUserEmail(email || '');
+        setProfilePicture(profilePicture || null);
         setLoginType('user');
       } 
       else {
         setUsername('User');
         setUserEmail('');
+        setProfilePicture(null);
         setLoginType('');
       }
     };
@@ -106,14 +109,17 @@ const Header = () => {
 
     const storedEmail = localStorage.getItem('userEmail');
     const storedUsername = localStorage.getItem('username');
+    const storedProfilePicture = localStorage.getItem('profilePicture');
 
     if (storedEmail === 'admin@gmail.com') {
       setUsername('Admin');
       setUserEmail(storedEmail);
+      setProfilePicture(null);
       setLoginType('admin');
     } else if (storedUsername) {
       setUsername(storedUsername);
       setUserEmail(storedEmail || '');
+      setProfilePicture(storedProfilePicture || null);
       setLoginType('user');
     }
 
@@ -137,10 +143,12 @@ const Header = () => {
     localStorage.removeItem('username');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userId');
+    localStorage.removeItem('profilePicture');
     
     // Force state update before closing menu
     setUsername('User');
     setUserEmail('');
+    setProfilePicture(null);
     setLoginType('');
     
     window.dispatchEvent(new CustomEvent('loginUpdate', {
@@ -181,7 +189,7 @@ const Header = () => {
           </Typography>
           <IconButton color="inherit" onClick={handleProfileClick}>
             <Avatar
-              src="https://www.w3schools.com/howto/img_avatar.png"
+              src={profilePicture || "https://www.w3schools.com/howto/img_avatar.png"}
               alt="User Avatar"
               style={{ width: 40, height: 40 }}
             />
@@ -209,7 +217,7 @@ const Header = () => {
             >
               <Box className={classes.menuHeader}>
                 <Avatar 
-                  src="https://www.w3schools.com/howto/img_avatar.png" 
+                  src={profilePicture || "https://www.w3schools.com/howto/img_avatar.png"} 
                   className={classes.avatarLarge}
                 />
                 <Typography variant="subtitle1" className={classes.usernameText}>
@@ -269,16 +277,15 @@ const Header = () => {
                   <ListItemIcon>
                     <AccountCircle fontSize="small" />
                   </ListItemIcon>
-                  Login
-                </MenuItem>
-              )}
-            </Menu>
-          )}
+                    Login
+                  </MenuItem>
+                )}
+              </Menu>
+            )}
+          </Box>
         </Box>
       </Box>
-    </Box>
-  );
-};
-
+    );
+  };
 
 export default Header;
